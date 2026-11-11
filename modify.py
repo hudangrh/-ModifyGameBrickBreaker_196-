@@ -103,3 +103,33 @@ def draw_background():
             (0, y), (WIDTH, y), 1
         )
 
+#GLOW AND TEKS
+def draw_glow(surface, color, position, radius):
+    glow = pygame.Surface(
+        (radius * 4, radius * 4),
+        pygame.SRCALPHA
+    )
+    for i in range(4, 0, -1):
+        alpha = 15 + (5 - i) * 15
+        pygame.draw.circle(
+            glow,
+            (*color, alpha),
+            (radius * 2, radius * 2),
+            radius * i // 2
+        )
+    surface.blit(
+        glow,
+        (
+            int(position[0] - radius * 2),
+            int(position[1] - radius * 2)
+        )
+    )
+
+def draw_text(text, font_object, color, x, y, center=True):
+    image = font_object.render(text, True, color)
+    rect = image.get_rect()
+    if center:
+        rect.center = (x, y)
+    else:
+        rect.topleft = (x, y)
+    screen.blit(image, rect)
