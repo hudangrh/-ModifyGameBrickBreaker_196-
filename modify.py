@@ -67,3 +67,39 @@ POWER_NAMES = {
     "slow": "SLOW MOTION",
     "magnet": "MAGNET PADDLE"
 }
+
+#BACKGROUND
+stars = []
+for _ in range(110):
+    stars.append([
+        random.randint(0, WIDTH),
+        random.randint(0, HEIGHT),
+        random.uniform(0.3, 1.5),
+        random.randint(1, 2)
+    ])
+
+def draw_background():
+    screen.fill(BLACK)
+    for star in stars:
+        star[1] += star[2]
+        if star[1] > HEIGHT:
+            star[1] = 0
+            star[0] = random.randint(0, WIDTH)
+        brightness = random.randint(80, 180)
+        pygame.draw.circle(
+            screen,
+            (brightness // 3, brightness // 2, brightness),
+            (int(star[0]), int(star[1])),
+            star[3]
+        )
+    for x in range(0, WIDTH, 50):
+        pygame.draw.line(
+            screen, (14, 19, 38),
+            (x, 55), (x, HEIGHT), 1
+        )
+    for y in range(55, HEIGHT, 50):
+        pygame.draw.line(
+            screen, (14, 19, 38),
+            (0, y), (WIDTH, y), 1
+        )
+
