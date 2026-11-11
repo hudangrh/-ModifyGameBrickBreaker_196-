@@ -209,3 +209,165 @@ def create_thunder_sound():
 
     except (pygame.error, OSError, ValueError):
         thunder_sound = None
+
+#LIGHTNING EFFECT
+thunder_effects = []
+shockwaves = []
+
+flash_until = 0
+flash_color = CYAN
+
+class ThunderBolt:
+    def __init__(self, start, end):
+        self.life = random.randint(9, 15)
+        self.max_life = self.life
+
+        self.color = random.choice([
+            CYAN, WHITE, BLUE, PURPLE
+        ])
+
+        x1, y1 = start
+        x2, y2 = end
+
+        self.points = []
+        segments = 12
+
+        for i in range(segments + 1):
+            progress = i / segments
+            x = x1 + (x2 - x1) * progress
+            y = y1 + (y2 - y1) * progress
+            if i not in (0, segments):
+                x += random.randint(-28, 28)
+            self.points.append((int(x), int(y)))
+
+        self.branches = []
+        for _ in range(3):
+            index = random.randint(2, segments - 2)
+
+            bx, by = self.points[index]
+
+            self.branches.append([
+                (bx, by),
+                (
+                    bx + random.randint(-35, 35),
+                    by + random.randint(10, 35)
+                ),
+                (
+                    bx + random.randint(-55, 55),
+                    by + random.randint(35, 65)
+                )
+            ])
+    def update(self):
+        self.life -= 1
+    def draw(self):
+        if self.life <= 0:
+            return
+        brightness = self.life / self.max_life
+        color = tuple(
+            int(c * brightness)
+            for c in self.color
+        )
+        pygame.draw.lines(
+            screen, (30, 70, 180),
+            False, self.points, 9
+        )
+        pygame.draw.lines(
+            screen, color,
+            False, self.points, 4
+        )
+        pygame.draw.lines(
+            screen, WHITE,
+            False, self.points, 1
+        )
+        for branch in self.branches:
+            pygame.draw.lines(
+                screen, color,
+                False, branch, 2
+            )
+
+class Shockwave:
+    def __init__(self, x, y, color=CYAN):
+        self.x = int(x)
+        self.y = int(y)
+        self.radius = 5
+        self.life = 22
+        self.color = color
+    def update(self):
+        self.radius += 5
+        self.life -= 1
+    def draw(self):
+        if self.life <= 0:
+            return
+        color = tuple(
+            int(c * self.life / 22)
+            for c in self.color
+        )
+        pygame.draw.circle(
+            screen,
+            color,
+            (self.x, self.y),
+            self.radius,
+            3
+        )
+
+def trigger_thunder(x, y, strong=False):
+    global flash_until, flash_color
+    global last_thunder_sound
+
+    x = int(x)
+    y = int(y)
+
+    count = 3 if strong else 1
+    for _ in range(count):
+        start_x = x + random.randint(-100, 100)
+
+        thunder_effects.append(
+            ThunderBolt(
+                (
+                    start_x,
+                    max(55, y - random.randint(100, 190))
+                ),
+                (
+                    x + random.randint(-15, 15),
+                    y
+                )
+            )
+        )
+
+    shockwaves.append(
+        Shockwave(
+            x, y,
+            ORANGE if strong else CYAN
+        )
+    )
+    flash_until = pygame.time.get_ticks() + (
+        110 if strong else 55
+    )
+    flash_color = PURPLE if strong else CYAN
+    current_time = pygame.time.get_ticks()
+    if (
+        thunder_sound is not None
+        and current_time - last_thunder_sound > 250
+    ):
+        thunder_sound.play()
+        last_thunder_sound = current_time
+
+def draw_thunderstorm(now):
+    for bolt in thunder_effects[:]:
+        bolt.update()
+        bolt.draw()
+        if bolt.life <= 0:
+            thunder_effects.remove(bolt)
+    for wave in shockwaves[:]:
+        wave.update()
+        wave.draw()
+        if wave.life <= 0:
+            shockwaves.remove(wave)
+    if now < flash_until:
+        flash_surface = pygame.Surface(
+            (WIDTH, HEIGHT),
+            pygame.SRCALPHA
+        )
+        flash_surface.fill((*flash_color, 35))
+        screen.blit(flash_surface, (0, 0))
+
