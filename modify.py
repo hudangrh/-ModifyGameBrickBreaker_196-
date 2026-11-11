@@ -167,3 +167,45 @@ def create_explosion(x, y, color, amount=18):
         particles.append(
             Particle(x, y, color)
         )
+
+#SOUND EFFECTS
+thunder_sound = None
+last_thunder_sound = 0
+
+def create_thunder_sound():
+    global thunder_sound
+    try:
+        mixer_info = pygame.mixer.get_init()
+        if mixer_info is None:
+            return
+        sample_rate, audio_format, channels = mixer_info
+        if audio_format != -16:
+            return
+        samples = array.array("h")
+        duration = 1.1
+        total_samples = int(sample_rate * duration)
+        low_noise = 0.0
+        for i in range(total_samples):
+            t = i / sample_rate
+            low_noise += random.uniform(-1, 1) * 0.045
+            low_noise *= 0.97
+            envelope = math.exp(-t * 2.8)
+            crack = (
+                random.uniform(-1, 1)
+                * math.exp(-t * 35)
+                * 0.65
+            )
+            value = (low_noise * 0.8 + crack) * envelope
+            sample = max(
+                -32767,
+                min(32767, int(value * 32767))
+            )
+            for _ in range(channels):
+                samples.append(sample)
+        thunder_sound = pygame.mixer.Sound(
+            buffer=samples.tobytes()
+        )
+        thunder_sound.set_volume(0.5)
+
+    except (pygame.error, OSError, ValueError):
+        thunder_sound = None
