@@ -133,3 +133,37 @@ def draw_text(text, font_object, color, x, y, center=True):
     else:
         rect.topleft = (x, y)
     screen.blit(image, rect)
+
+#PARTICLES
+particles = []
+
+class Particle:
+    def __init__(self, x, y, color):
+        self.x = float(x)
+        self.y = float(y)
+        self.vx = random.uniform(-4, 4)
+        self.vy = random.uniform(-4, 4)
+        self.size = random.randint(2, 5)
+        self.life = random.randint(20, 40)
+        self.color = color
+
+    def update(self):
+        self.x += self.vx
+        self.y += self.vy
+        self.life -= 1
+        self.size *= 0.96
+
+    def draw(self):
+        if self.life > 0:
+            pygame.draw.circle(
+                screen,
+                self.color,
+                (int(self.x), int(self.y)),
+                max(1, int(self.size))
+            )
+
+def create_explosion(x, y, color, amount=18):
+    for _ in range(amount):
+        particles.append(
+            Particle(x, y, color)
+        )
